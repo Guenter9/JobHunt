@@ -12,7 +12,9 @@
     Enable 'Trust access to the VBA project object model' in Trust Center.
 #>
 
-Set-StrictMode -Version Latest
+# Note: StrictMode is intentionally NOT set here – COM late-binding objects
+# do not expose a fixed property list, which causes false "property not found"
+# errors under StrictMode -Version Latest.
 $ErrorActionPreference = "Stop"
 
 $srcRoot = Join-Path $PSScriptRoot "..\src"
@@ -26,10 +28,23 @@ try {
     exit 1
 }
 
-$vbaProject = $outlook.VBE.ActiveVBProject
-if (-not $vbaProject) {
-    Write-Error "Could not access the Outlook VBA project. " +
-                "Enable 'Trust access to the VBA project object model' in Trust Center settings."
+$vbaProject = $null
+try {
+    $vbe = $outlook.VBE
+    if ($null -eq $vbe) { throw "VBE is null" }
+    $vbaProject = $vbe.ActiveVBProject
+} catch {
+    Write-Host ""
+    Write-Host "ERROR: Cannot access the Outlook VBA project." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Please enable 'Trust access to the VBA project object model':" -ForegroundColor Yellow
+    Write-Host "  Outlook -> File -> Options -> Trust Center -> Trust Center Settings" -ForegroundColor Yellow
+    Write-Host "  -> Macro Settings -> check 'Trust access to the VBA project object model'" -ForegroundColor Yellow
+    Write-Host ""
+    exit 1
+}
+if ($null -eq $vbaProject) {
+    Write-Error "ActiveVBProject is null – make sure Outlook is fully loaded."
     exit 1
 }
 
