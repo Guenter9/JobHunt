@@ -90,10 +90,13 @@ Public Sub Load()
 
     ' --- Rebuild JobApplication objects
     Dim vItem As Variant
+    Dim oDict As Scripting.Dictionary
+    Dim oApp  As JobApplication
     For Each vItem In oArray
         If TypeName(vItem) = "Dictionary" Then
-            Dim oApp As New JobApplication
-            oApp.FromDict vItem
+            Set oDict = vItem
+            Set oApp = New JobApplication
+            oApp.FromDict oDict
             m_Items.Add oApp, oApp.Tag
         End If
     Next vItem

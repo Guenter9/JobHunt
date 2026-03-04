@@ -117,53 +117,44 @@ End Sub
 Private Const CTX_BTN_CAPTION As String = "Job Application..."
 
 '------------------------------------------------------------------------------
-' Installs a "Job Application..." button in the Outlook mail item context menu.
+' Installs a "Job Application..." button in the Quick Access Toolbar (QAT).
+'
+' Background: In modern Outlook 365 the classic mail-item context-menu
+' CommandBars ("Context Menu", "Message", "Item List") are no longer
+' accessible via VBA – they do not appear in CommandBars enumeration.
+' The QAT is the only CommandBar reliably reachable from VBA in all versions.
+'
 ' Called from Application_Startup in ThisOutlookSession.
 '------------------------------------------------------------------------------
 Public Sub InstallContextMenu()
     RemoveContextMenu   ' avoid duplicates
 
     On Error Resume Next
-    Dim oCB  As Office.CommandBar
     Dim oBtn As Office.CommandBarButton
-
-    ' Outlook uses different CommandBar names; try common ones
-    Dim aNames(2) As String
-    aNames(0) = "Context Menu"
-    aNames(1) = "Message"
-    aNames(2) = "Item List"
-
-    Dim i As Integer
-    For i = 0 To 2
-        Set oCB = Application.ActiveExplorer.CommandBars(aNames(i))
-        If Not oCB Is Nothing Then
-            Set oBtn = oCB.Controls.Add(msoControlButton, , , , True)
-            oBtn.Caption    = CTX_BTN_CAPTION
-            oBtn.OnAction   = "ShowJobApplicationDialog"
-            oBtn.Style      = msoButtonIconAndCaption
-            oBtn.BeginGroup = True
-        End If
-        Set oCB = Nothing
-    Next i
+    Set oBtn = Application.CommandBars("Quick Access Toolbar") _
+                           .Controls.Add(msoControlButton, , , , True)
+    If Not oBtn Is Nothing Then
+        oBtn.Caption    = CTX_BTN_CAPTION
+        oBtn.OnAction   = "ShowJobApplicationDialog"
+        oBtn.Style      = msoButtonIconAndCaption
+        oBtn.BeginGroup = True
+        oBtn.TooltipText = "JobHunt: Bewerbung verwalten"
+    End If
     On Error GoTo 0
 End Sub
 
 '------------------------------------------------------------------------------
-' Removes the "Job Application..." context menu button.
+' Removes the "Job Application..." button from the Quick Access Toolbar.
 ' Called from Application_Quit in ThisOutlookSession.
 '------------------------------------------------------------------------------
 Public Sub RemoveContextMenu()
     On Error Resume Next
-    Dim oCB  As Office.CommandBar
     Dim oCtrl As Office.CommandBarControl
-
-    For Each oCB In Application.ActiveExplorer.CommandBars
-        For Each oCtrl In oCB.Controls
-            If oCtrl.Caption = CTX_BTN_CAPTION Then
-                oCtrl.Delete
-            End If
-        Next oCtrl
-    Next oCB
+    For Each oCtrl In Application.CommandBars("Quick Access Toolbar").Controls
+        If oCtrl.Caption = CTX_BTN_CAPTION Then
+            oCtrl.Delete
+        End If
+    Next oCtrl
     On Error GoTo 0
 End Sub
 
