@@ -1,0 +1,61 @@
+Prompt
+
+Erzeuge Funktionen zur Verwaltung von Bewerbungen, dabei sollen  Mails, die im Posteingang einlaufen einer neuen oder bestehenden JobApplication zugeordnet werden. 
+Im rahmen der Zuordnung soll die Mail einmal auf in einen Unterordner innerhalb des Mailaccounts (IMP Ordner) als MSG-Datei auf Dateibasis (MSG-Datei) verschoben werden. Für beide Orte wird in den Eistellungen ein Basis definiert, die als Root für die jeweilugen unterordner dient.
+Die HauptFunktion wird über den aufruf eines Dialoges (Form) geteuert, der solbald ein Mailitem selektiert ooder offen ist aufgerufen werden kann. In diesem Dialog sind alle notwendigen Informatione zur anlage neuer oder zur auswahl bestehender Jobapplication vorhanden.
+Vom Dialog aus kann eine Mailitem zu einer neuen  Bewerbung erstmalig erfasst oder zu einer bestehenden zugeordnet werden. Dabei kann der jeweilige status und Vorgang in einer art Historie erfasst werden. 
+Die zugehörigkeit einer Mail wird dan über ein Tag als Kategorie in der Mail in Outlook gespeichert. Über diesen Tag kann die Jobapplication immer aufgerufen werden (Dialog) und mit Notizen oder Statusänderungen aktualisiert werden. 
+
+Es folgt ein Vorschlag der zu verwendenden Klassen und ihre funktionen. 
+
+Modul Setting
+enthält folgende Attibute die aus allen Klassenabgerufen werden können 
+
+Rootverzeichns (Text): Ordner in dem die Unterordner für die einObjekte der Jobapplication gespieichert werden können.
+VorlageMail (Text) : Ort eine Mailvorlage 
+
+
+Klasse Jobapplication
+------------------------
+
+erzeuge oder ändere die Klasse Jobapplication so dass folgende Attibute verwaltte werden können 
+
+ID(Text), Tag (text), Firma(Text), Position(Text), Ansprechpartner(Text), Anzeige_Link(Text), 
+Anzeige_Text(Text), IMAPFolder(Text), FileFoldername(Text), Datum_Bewerbung(Date),Status (Auswahl: geplant,gesendet,aktiv,archiviert), Historie (Memo)
+Datum_Änderung(Date), Notizen (Memo) , Mailacount
+
+
+Funktionen:
+init => Erzeugt eine neue Klassen mit den Pflichtfeldern: Firma, Position alle anderen Felder sind optional
+        die Funktion erzeugt 
+        - aus Firma und Position eine gültigen Namen für einen kurzen aber lesbaren FileFolder und einen Namen für einen IMAPOrdner, 
+        - einen TAG, der fortan auf der Mail die zugehörigkeit zur Jobapplication markiert (Kategorie)
+        Defaultwert für den Status ist "geplant"
+        Eine ID wird als laufende Nummer automatisch hochgezählt
+
+create => legt den File-Ordner unterhalb des Rootverzeichns an falls nicht vorhanden,
+          legt einen Imap-Ordner im Mailcaccount an falls nicht vorhanden, 
+          Erzeugt ein Tag aus Firma und Position und der ID, 
+          trägt das Objekt in die Auflistung JobApplicationList ein und speichert diese
+          trägt ein Datum und die Info "erzeugt" in der Historie ein
+
+read (Tag) => liest die Informationen aus der JobApplicationList
+
+addMail (aMailitem as MailItem, aStatus, Tag, Vorgang as Text) => 
+        fügt dem Mailitem den Tag der Jobaplication hinzu speichert den Mailitem lokal im Filefolder als msg-Datei. 
+        Verschiebt den Mailitem in den Imap-Ordner der Jobaplication, aktualisiert datum_Änderung und Status in der JobApplicationList. 
+        Speichert den Vorgang mit datum im Feld Historie (neue Linien am Beginn des Memos). 
+        Speichert das objekt in der JobApplicationList
+
+
+
+
+Klasse JobapplicationList
+------------------------
+erzeuge oder ändere eine Klasse JobApplicationList als Collection der Jobapplication. 
+Diese enthält alle Jobapplications und wird als Jsondatei im Rootverzeichns gespeichert und wieder eingelesen werden. 
+Über den Tag und die ID können einzene Obejekt zurückgegeben werden. Die Speicherung erfolgt als Json Datei
+
+
+Neue Funktionen: 
+1.) Übernehme einen bestehenden File-Ordner als neue Jobapplication. Zeige dazu den Dialog zur Anlage neuer Jobaplication an und lege die Dateien im ordner in die neuen Struktur. Zum abschluss verschiebe den alten Ordner in einen eigenen unterordner mit dem namen migriert

@@ -18,13 +18,32 @@ Option Explicit
 Private WithEvents m_Inbox As Outlook.Items
 
 '------------------------------------------------------------------------------
-' Fired when Outlook starts. Hooks into the Inbox Items collection.
+' Fired when Outlook starts.
+' - Ensures settings file exists (creates defaults if missing)
+' - Hooks into the Inbox Items collection for auto-tagging
+' - Installs the right-click context menu button
 '------------------------------------------------------------------------------
 Private Sub Application_Startup()
+    ' Ensure the %APPDATA%\JobHunt\settings.ini exists
+    Settings.EnsureSettingsExist
+
+    ' Hook into Inbox for auto-tagging
     Dim oNS As Outlook.NameSpace
-    Set oNS    = Application.GetNamespace("MAPI")
+    Set oNS     = Application.GetNamespace("MAPI")
     Set m_Inbox = oNS.GetDefaultFolder(olFolderInbox).Items
-    Debug.Print "JobHunt Add-in loaded – " & Now()
+
+    ' Install context menu item
+    JobHunt.InstallContextMenu
+
+    Debug.Print "JobHunt Add-in geladen - " & Now()
+End Sub
+
+'------------------------------------------------------------------------------
+' Fired when Outlook closes.
+' Removes the custom context menu button.
+'------------------------------------------------------------------------------
+Private Sub Application_Quit()
+    JobHunt.RemoveContextMenu
 End Sub
 
 '------------------------------------------------------------------------------
