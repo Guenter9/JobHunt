@@ -33,23 +33,58 @@ try {
 }
 
 $vbaProject = $null
+$vbeAvailable = $false
 try {
     $vbe = $outlook.VBE
-    if ($null -eq $vbe) { throw "VBE is null" }
-    $vbaProject = $vbe.ActiveVBProject
-} catch {
+    if ($null -ne $vbe) {
+        $vbaProject = $vbe.ActiveVBProject
+        if ($null -ne $vbaProject) { $vbeAvailable = $true }
+    }
+} catch { }
+
+if (-not $vbeAvailable) {
+    # ---- Fallback: guided manual import --------------------------------------
+    $importExtensions = @("*.bas", "*.cls", "*.frm")
+    $files = Get-ChildItem -Path $srcRoot -Recurse -Include $importExtensions |
+             Where-Object { $_.BaseName -ne "ThisOutlookSession" } |
+             Sort-Object FullName
+
     Write-Host ""
-    Write-Host "ERROR: Cannot access the Outlook VBA project." -ForegroundColor Red
+    Write-Host "Automatic import is not available." -ForegroundColor Yellow
+    Write-Host "The 'Trust access to the VBA project object model' option is" -ForegroundColor Yellow
+    Write-Host "disabled or hidden in your Outlook version." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "Please enable 'Trust access to the VBA project object model':" -ForegroundColor Yellow
-    Write-Host "  Outlook -> File -> Options -> Trust Center -> Trust Center Settings" -ForegroundColor Yellow
-    Write-Host "  -> Macro Settings -> check 'Trust access to the VBA project object model'" -ForegroundColor Yellow
+    Write-Host "Please import the files manually:" -ForegroundColor Cyan
     Write-Host ""
-    exit 1
-}
-if ($null -eq $vbaProject) {
-    Write-Error "ActiveVBProject is null – make sure Outlook is fully loaded."
-    exit 1
+    Write-Host "  1. Press Alt+F11 in Outlook to open the VBA Editor" -ForegroundColor White
+    Write-Host "  2. In the menu: File -> Import File  (or press Ctrl+M)" -ForegroundColor White
+    Write-Host "  3. Import these files IN ORDER:" -ForegroundColor White
+    Write-Host ""
+
+    $i = 1
+    foreach ($f in $files) {
+        Write-Host ("     {0}. {1}" -f $i, $f.FullName) -ForegroundColor Green
+        $i++
+    }
+
+    Write-Host ""
+    Write-Host "  4. For ThisOutlookSession.cls:" -ForegroundColor White
+    $sessionFile = Join-Path $srcRoot "classes\ThisOutlookSession.cls"
+    Write-Host "     Open the file below and PASTE its code into the" -ForegroundColor White
+    Write-Host "     'ThisOutlookSession' module in the VBA Editor:" -ForegroundColor White
+    Write-Host "     $sessionFile" -ForegroundColor Green
+    Write-Host ""
+
+    # Open Explorer to the src folder for convenience
+    Write-Host "Opening src folder in Explorer..." -ForegroundColor Cyan
+    Start-Process explorer.exe $srcRoot
+
+    # Also open each importable file in the default editor for copy-paste convenience
+    Write-Host ""
+    Write-Host "Tip: You can drag .bas/.cls files from Explorer directly into the" -ForegroundColor DarkGray
+    Write-Host "     VBA Editor's Project window to import them." -ForegroundColor DarkGray
+    Write-Host ""
+    exit 0
 }
 
 # ---- Import files ------------------------------------------------------------
