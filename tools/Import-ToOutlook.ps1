@@ -52,21 +52,32 @@ try {
 
 if (-not $vbeAvailable) {
     # ---- Fallback: guided manual import --------------------------------------
-    $importExtensions = @("*.bas", "*.cls", "*.frm")
+    # Note: .frm files require a companion .frx binary – importing them directly
+    # causes error &H80004005.  frmJobApplication must be created manually.
+    $importExtensions = @("*.bas", "*.cls")
     $files = Get-ChildItem -Path $srcRoot -Recurse -Include $importExtensions |
-             Where-Object { $_.BaseName -ne "ThisOutlookSession" } |
+             Where-Object { $_.BaseName -notin @("ThisOutlookSession") } |
              Sort-Object FullName
+
+    $frmCodeFile = Join-Path $srcRoot "classes\frmJobApplication.frm"
+    $sessionFile = Join-Path $srcRoot "classes\ThisOutlookSession.cls"
 
     Write-Host ""
     Write-Host "Automatic import is not available." -ForegroundColor Yellow
-    Write-Host "Application.VBE is blocked (method not supported) or" -ForegroundColor Yellow
-    Write-Host "'Trust access to the VBA project object model' is disabled." -ForegroundColor Yellow
+    Write-Host "Application.VBE is blocked or 'Trust access to the VBA project" -ForegroundColor Yellow
+    Write-Host "object model' is disabled." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "Please import the files manually in the VBA Editor:" -ForegroundColor Cyan
+    Write-Host "Follow these steps in the VBA Editor (Alt+F11):" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  1. Press Alt+F11 in Outlook to open the VBA Editor" -ForegroundColor White
-    Write-Host "  2. In the menu: File -> Import File  (or press Ctrl+M)" -ForegroundColor White
-    Write-Host "  3. Import these files IN ORDER:" -ForegroundColor White
+    Write-Host "  STEP 1 – Create the UserForm (do this first):" -ForegroundColor White
+    Write-Host "     a) Einfuegen / Insert > UserForm" -ForegroundColor Green
+    Write-Host "     b) Properties window (F4): set Name = frmJobApplication" -ForegroundColor Green
+    Write-Host "     c) Double-click the form to open its code window" -ForegroundColor Green
+    Write-Host "     d) Replace ALL existing code with the contents of:" -ForegroundColor Green
+    Write-Host "        $frmCodeFile" -ForegroundColor Cyan
+    Write-Host "        (copy everything from 'Option Explicit' onwards)" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  STEP 2 – Import remaining files (File > Import / Ctrl+M):" -ForegroundColor White
     Write-Host ""
 
     $i = 1
@@ -76,36 +87,30 @@ if (-not $vbeAvailable) {
     }
 
     Write-Host ""
-    Write-Host "  4. For ThisOutlookSession.cls:" -ForegroundColor White
-    $sessionFile = Join-Path $srcRoot "classes\ThisOutlookSession.cls"
-    Write-Host "     Open the file below and PASTE its code into the" -ForegroundColor White
-    Write-Host "     'ThisOutlookSession' module in the VBA Editor:" -ForegroundColor White
-    Write-Host "     $sessionFile" -ForegroundColor Green
+    Write-Host "  STEP 3 – ThisOutlookSession (paste, do NOT import):" -ForegroundColor White
+    Write-Host "     Open 'ThisOutlookSession' in the VBA Project tree and" -ForegroundColor Green
+    Write-Host "     PASTE the code from:" -ForegroundColor Green
+    Write-Host "     $sessionFile" -ForegroundColor Cyan
     Write-Host ""
 
-    # Open Explorer to the src folder for convenience
     Write-Host "Opening src folder in Explorer..." -ForegroundColor Cyan
     Start-Process explorer.exe $srcRoot
-
-    # Also open each importable file in the default editor for copy-paste convenience
-    Write-Host ""
-    Write-Host "Tip: You can drag .bas/.cls files from Explorer directly into the" -ForegroundColor DarkGray
-    Write-Host "     VBA Editor's Project window to import them." -ForegroundColor DarkGray
     Write-Host ""
     exit 0
 }
 
 # ---- Import files ------------------------------------------------------------
-$importExtensions = @("*.bas", "*.cls", "*.frm")
+# Note: .frm files require a companion .frx binary and cannot be imported
+# programmatically without it.  frmJobApplication is handled separately below.
+$importExtensions = @("*.bas", "*.cls")
 $files = Get-ChildItem -Path $srcRoot -Recurse -Include $importExtensions
 
 foreach ($file in $files) {
     Write-Host "Importing: $($file.Name) ..." -NoNewline
 
-    # Remove existing component with the same name to avoid duplicates
     $componentName = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
 
-    # Skip ThisOutlookSession – it is a built-in document class, not importable
+    # Skip ThisOutlookSession – built-in document class, not importable
     if ($componentName -eq "ThisOutlookSession") {
         Write-Host " SKIPPED (apply manually)"
         continue
@@ -123,5 +128,10 @@ foreach ($file in $files) {
 Write-Host ""
 Write-Host "Import complete." -ForegroundColor Green
 Write-Host ""
-Write-Host "NOTE: Apply src\classes\ThisOutlookSession.cls manually by copying its" -ForegroundColor Yellow
-Write-Host "      code into the 'ThisOutlookSession' module in the Outlook VBA IDE." -ForegroundColor Yellow
+Write-Host "MANUAL STEPS STILL REQUIRED:" -ForegroundColor Yellow
+Write-Host "  1. frmJobApplication: in VBA Editor, Insert > UserForm," -ForegroundColor Yellow
+Write-Host "     rename to 'frmJobApplication', paste code from:" -ForegroundColor Yellow
+$frmCodeFile = Join-Path (Split-Path $srcRoot) "src\classes\frmJobApplication.frm"
+Write-Host "     $frmCodeFile" -ForegroundColor Cyan
+Write-Host "  2. ThisOutlookSession: paste code from src\classes\ThisOutlookSession.cls" -ForegroundColor Yellow
+Write-Host "     into the existing 'ThisOutlookSession' module." -ForegroundColor Yellow

@@ -1,12 +1,17 @@
-VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmJobApplication 
-   Caption         =   "Job Application verwalten"
-   ClientHeight    =   9000
-   ClientLeft      =   0
-   ClientTop       =   0
-   ClientWidth     =   5760
-   StartUpPosition =   1  'CenterOwner
-End
+'  !! NICHT IMPORTIEREN !!
+'  Diese Datei enthaelt nur den VBA-Code fuer frmJobApplication.
+'
+'  UserForms benoetigen beim Import eine binaere .frx-Begleitdatei.
+'  Da diese nicht im Repository liegt, schlaegt der Import fehl.
+'
+'  Stattdessen:
+'    1. In Outlook VBA-Editor (Alt+F11):
+'       Einfuegen > UserForm
+'    2. Im Eigenschafts-Fenster (F4):
+'       Name = frmJobApplication
+'    3. Den folgenden VBA-Code (ab "Option Explicit") in das
+'       Code-Fenster der neuen Form einfuegen (Doppelklick auf Form).
+'  -----------------------------------------------------------------------
 Attribute VB_Name = "frmJobApplication"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
