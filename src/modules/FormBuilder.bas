@@ -1,26 +1,29 @@
 Attribute VB_Name = "FormBuilder"
 '==============================================================================
 ' Module     : FormBuilder
-' Description: Programmatically creates the frmJobApplication UserForm.
+' Description: Ehemals dynamischer Form-Ersteller via Application.VBE.
 '
-'  Run once (or after each code change) to build/rebuild the form:
-'    Call FormBuilder.RebuildForm  from the VBA Immediate window
+'  Application.VBE wird von neueren Outlook-Versionen / Gruppenrichtlinien
+'  blockiert ("Die Methode wird nicht unterstuetzt").
 '
-'  Key design decision:
-'    Controls.Add() in the VBE Designer returns a limited proxy object.
-'    In Outlook VBA only geometry (Left/Top/Width/Height) and Name can be set
-'    reliably at design time.  ALL other properties (Caption, MultiLine,
-'    ScrollBars, Locked, BackColor, Value, Visible, Font.*) must be set at
-'    runtime.  They are set in the generated InitControls() sub which is
-'    called first from UserForm_Initialize.
+'  Die Form frmJobApplication wird daher nicht mehr hier erzeugt, sondern
+'  liegt als fertige Textdatei im Repository und wird direkt importiert:
 '
-'  Requirements:
-'    Outlook > File > Options > Trust Center > Trust Center Settings >
-'    Macro Settings > "Trust access to the VBA project object model" enabled.
+'    src\classes\frmJobApplication.frm  – das fertige UserForm
+'    src\classes\clsBtnSink.cls         – Event-Sink fuer CommandButtons
+'    src\classes\clsOptSink.cls         – Event-Sink fuer OptionButtons
+'    src\classes\clsCboSink.cls         – Event-Sink fuer ComboBoxes
+'
+'  Import (einmalig):
+'    1. Alt+F11  (VBA-Editor oeffnen)
+'    2. Datei > Importieren  fuer jede der obigen Dateien
+'     – ODER –
+'    PowerShell: tools\Import-ToOutlook.ps1 ausfuehren
+'    (setzt "Trust access to the VBA project object model" NICHT voraus)
 '==============================================================================
 Option Explicit
 
-' ---- Public entry point ------------------------------------------------------
+' ---- Public entry point (bleibt fuer Abwaertskompatibilitaet) ----------------
 
 Public Sub RebuildForm()
     Dim oVBP As Object
@@ -29,6 +32,7 @@ Public Sub RebuildForm()
 
     On Error GoTo ErrHandler
 
+    ' Versuche VBE-Zugriff (funktioniert nur wenn Trust-Einstellung aktiv ist)
     Set oVBP = Application.VBE.ActiveVBProject
 
     ' Remove old form if present

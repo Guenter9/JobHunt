@@ -24,11 +24,19 @@ $ErrorActionPreference = "Stop"
 $srcRoot = Join-Path $PSScriptRoot "..\src"
 
 # ---- Validate prerequisites --------------------------------------------------
+# Note: Marshal.GetActiveObject was removed in .NET 5+; instead verify the
+# process is running first, then use New-Object -ComObject (Outlook is a
+# single-instance COM server and returns the existing instance when running).
+if (-not (Get-Process -Name outlook -ErrorAction SilentlyContinue)) {
+    Write-Error "Outlook is not running. Please start Outlook and try again."
+    exit 1
+}
+
 $outlook = $null
 try {
-    $outlook = [Runtime.InteropServices.Marshal]::GetActiveObject("Outlook.Application")
+    $outlook = New-Object -ComObject Outlook.Application
 } catch {
-    Write-Error "Outlook is not running. Please start Outlook and try again."
+    Write-Error "Could not connect to Outlook: $_"
     exit 1
 }
 
@@ -51,10 +59,10 @@ if (-not $vbeAvailable) {
 
     Write-Host ""
     Write-Host "Automatic import is not available." -ForegroundColor Yellow
-    Write-Host "The 'Trust access to the VBA project object model' option is" -ForegroundColor Yellow
-    Write-Host "disabled or hidden in your Outlook version." -ForegroundColor Yellow
+    Write-Host "Application.VBE is blocked (method not supported) or" -ForegroundColor Yellow
+    Write-Host "'Trust access to the VBA project object model' is disabled." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "Please import the files manually:" -ForegroundColor Cyan
+    Write-Host "Please import the files manually in the VBA Editor:" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  1. Press Alt+F11 in Outlook to open the VBA Editor" -ForegroundColor White
     Write-Host "  2. In the menu: File -> Import File  (or press Ctrl+M)" -ForegroundColor White
