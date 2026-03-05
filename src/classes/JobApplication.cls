@@ -408,27 +408,32 @@ Private Function GetIMAPFolder() As Outlook.MAPIFolder
 End Function
 
 '------------------------------------------------------------------------------
-' Finds the ImapRoot folder across all mail stores.
+' Finds the ImapRoot folder in the store of the currently open mail item.
 '------------------------------------------------------------------------------
 Private Function GetIMAPRootFolder() As Outlook.MAPIFolder
     Dim sImapRoot As String
     sImapRoot = Settings.ImapRoot()
     If Len(sImapRoot) = 0 Then Exit Function
 
-    Dim oNS    As Outlook.NameSpace
-    Set oNS = Application.GetNamespace("MAPI")
-
+    Dim oItem   As Object
     Dim oStore  As Outlook.Store
-    Dim oFolder As Outlook.MAPIFolder
-    For Each oStore In oNS.Stores
-        On Error Resume Next
-        Set oFolder = oStore.GetRootFolder().Folders(sImapRoot)
-        On Error GoTo 0
-        If Not oFolder Is Nothing Then
-            Set GetIMAPRootFolder = oFolder
-            Exit Function
-        End If
-    Next oStore
+    Dim oRoot   As Outlook.MAPIFolder
+
+    On Error Resume Next
+    Set oItem = Application.ActiveInspector.CurrentItem
+    On Error GoTo 0
+    If oItem Is Nothing Then Exit Function
+
+    On Error Resume Next
+    Set oStore = oItem.Parent.Store
+    On Error GoTo 0
+    If oStore Is Nothing Then Exit Function
+
+    On Error Resume Next
+    Set oRoot = oStore.GetRootFolder().Folders(sImapRoot)
+    On Error GoTo 0
+
+    Set GetIMAPRootFolder = oRoot
 End Function
 
 '------------------------------------------------------------------------------
