@@ -13,6 +13,9 @@ Public Const CATEGORY_JOB_APP   As String = "Job Application"
 Public Const CATEGORY_RECRUITER As String = "Recruiter"
 Public Const CATEGORY_FOLLOWUP  As String = "Follow-Up"
 Public Const ADDIN_FOLDER       As String = "JobHunt"
+' ---- Context Menu ------------------------------------------------------------
+
+Private Const CTX_BTN_CAPTION As String = "Job Application..."
 
 ' ---- Public Entry Points -----------------------------------------------------
 
@@ -112,9 +115,6 @@ Public Sub ShowJobApplicationDialog()
     frmJobApplication.Show vbModeless
 End Sub
 
-' ---- Context Menu ------------------------------------------------------------
-
-Private Const CTX_BTN_CAPTION As String = "Job Application..."
 
 '------------------------------------------------------------------------------
 ' Installs a "Job Application..." button in the Quick Access Toolbar (QAT).

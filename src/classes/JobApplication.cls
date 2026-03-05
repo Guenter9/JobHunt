@@ -302,6 +302,63 @@ Public Sub FromDict(d As Scripting.Dictionary)
     On Error GoTo 0
 End Sub
 
+'------------------------------------------------------------------------------
+' ToCsvFields: Returns a zero-based array of field values in CSV column order.
+' Column order matches CSV_HEADERS in JobApplicationList:
+'   0  ID               8  FileFoldername
+'   1  Tag              9  Datum_Bewerbung
+'   2  Firma           10  Status
+'   3  Position        11  Historie
+'   4  Ansprechpartner 12  Datum_Aenderung
+'   5  Anzeige_Link    13  Notizen
+'   6  Anzeige_Text    14  Mailaccount
+'   7  IMAPFolder
+'------------------------------------------------------------------------------
+Public Function ToCsvFields() As String()
+    Dim a(0 To 14) As String
+    a(0)  = m_ID
+    a(1)  = m_Tag
+    a(2)  = m_Firma
+    a(3)  = m_Position
+    a(4)  = m_Ansprechpartner
+    a(5)  = m_Anzeige_Link
+    a(6)  = m_Anzeige_Text
+    a(7)  = m_IMAPFolder
+    a(8)  = m_FileFoldername
+    a(9)  = IIf(m_Datum_Bewerbung = 0, "", Format(m_Datum_Bewerbung, "YYYY-MM-DD"))
+    a(10) = m_Status
+    a(11) = m_Historie
+    a(12) = IIf(m_Datum_Aenderung = 0, "", Format(m_Datum_Aenderung, "YYYY-MM-DD HH:MM:SS"))
+    a(13) = m_Notizen
+    a(14) = m_Mailaccount
+    ToCsvFields = a
+End Function
+
+'------------------------------------------------------------------------------
+' FromCsvFields: Populates this instance from a zero-based field array.
+' Array must have at least 15 elements (indices 0-14).
+'------------------------------------------------------------------------------
+Public Sub FromCsvFields(a() As String)
+    If UBound(a) < 14 Then Exit Sub
+    m_ID              = a(0)
+    m_Tag             = a(1)
+    m_Firma           = a(2)
+    m_Position        = a(3)
+    m_Ansprechpartner = a(4)
+    m_Anzeige_Link    = a(5)
+    m_Anzeige_Text    = a(6)
+    m_IMAPFolder      = a(7)
+    m_FileFoldername  = a(8)
+    m_Status          = a(10)
+    m_Historie        = a(11)
+    m_Notizen         = a(13)
+    m_Mailaccount     = a(14)
+    On Error Resume Next
+    If Len(a(9)) > 0 Then m_Datum_Bewerbung = CDate(a(9))
+    If Len(a(12)) > 0 Then m_Datum_Aenderung = CDate(a(12))
+    On Error GoTo 0
+End Sub
+
 ' ---- Private Helpers ---------------------------------------------------------
 
 '------------------------------------------------------------------------------
